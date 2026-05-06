@@ -21,7 +21,8 @@ Implemented:
 - exact, distributed-exact, and smooth log-sum-exp aggregation
 - 1D cumulative and finite-window integral formulas
 - Burn autodiff compatibility
-- upstream golden fixtures generated from StanfordASL `stlcg.py`
+- pinned upstream golden fixtures generated from StanfordASL `stlcg.py`
+- validation for malformed intervals and evaluation options
 
 Not included in v0.1:
 
@@ -45,6 +46,9 @@ let trace = formula.robustness_trace(&env, EvalOptions::default()).unwrap();
 ```
 
 Inputs are expected to be time-reversed, matching upstream STLCG semantics.
+Unlike upstream, empty bounded `until`/`then` windows evaluate to negative
+infinity rather than `-1e6` so very negative real robustness values are not
+masked.
 
 ## API Overview
 
@@ -87,12 +91,14 @@ Run the full local check suite:
 cargo fmt --check
 cargo test
 cargo clippy --all-targets --all-features -- -D warnings
+cargo rustdoc -- -D missing-docs
+cargo package --no-verify
 ```
 
 ## Upstream Golden Fixtures
 
-The fixture at `tests/fixtures/upstream_stlcg.json` is generated from the
-upstream StanfordASL Python implementation. To refresh it:
+The fixture at `tests/fixtures/upstream_stlcg.json` is generated from a pinned
+upstream StanfordASL Python implementation commit. To refresh it:
 
 ```sh
 python3 -m venv /tmp/stlcg-upstream-venv

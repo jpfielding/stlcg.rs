@@ -17,7 +17,11 @@ import urllib.request
 from pathlib import Path
 
 
-SOURCE_URL = "https://raw.githubusercontent.com/StanfordASL/stlcg/master/src/stlcg.py"
+SOURCE_COMMIT = "abd16c92108f1b57a72d66c58492c949b6c5a8ea"
+SOURCE_URL = (
+    "https://raw.githubusercontent.com/StanfordASL/stlcg/"
+    f"{SOURCE_COMMIT}/src/stlcg.py"
+)
 OUTPUT = Path(__file__).with_name("upstream_stlcg.json")
 
 
@@ -85,11 +89,42 @@ def main():
         case("or_smooth_scale_10", stlcg.Or(ge2, lt2), (x, x), scale=10.0),
         case("until_unbounded_ge2_until_le2", stlcg.Until(ge2, lt2), (x, x)),
         case("then_unbounded_ge2_then_le2", stlcg.Then(ge2, lt2), (x, x)),
+        case(
+            "until_closed_1_2_ge2_until_le2",
+            stlcg.Until(ge2, lt2, interval=[1, 2]),
+            (x, x),
+        ),
+        case(
+            "then_closed_1_2_ge2_then_le2",
+            stlcg.Then(ge2, lt2, interval=[1, 2]),
+            (x, x),
+        ),
+        case(
+            "until_from_1_ge2_until_le2",
+            stlcg.Until(ge2, lt2, interval=[1, np.inf]),
+            (x, x),
+        ),
+        case(
+            "then_from_1_ge2_then_le2",
+            stlcg.Then(ge2, lt2, interval=[1, np.inf]),
+            (x, x),
+        ),
+        case(
+            "until_unbounded_no_overlap_ge2_until_le2",
+            stlcg.Until(ge2, lt2, overlap=False),
+            (x, x),
+        ),
+        case(
+            "then_unbounded_no_overlap_ge2_then_le2",
+            stlcg.Then(ge2, lt2, overlap=False),
+            (x, x),
+        ),
         case("integral_identity_cumulative", stlcg.Integral1d(ident), x),
         case("integral_identity_window_0_1", stlcg.Integral1d(ident, interval=[0, 1]), x),
     ]
 
     payload = {
+        "source_commit": SOURCE_COMMIT,
         "source_url": SOURCE_URL,
         "trace": tensor_payload(x),
         "cases": cases,

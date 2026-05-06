@@ -11,21 +11,25 @@ pub struct SignalEnv<B: Backend> {
 }
 
 impl<B: Backend> SignalEnv<B> {
+    /// Create an empty signal environment.
     pub fn new() -> Self {
         Self {
             signals: HashMap::new(),
         }
     }
 
+    /// Insert a named trace and return the updated environment.
     pub fn with(mut self, name: impl Into<String>, trace: Trace<B>) -> Self {
         self.insert(name, trace);
         self
     }
 
+    /// Insert or replace a named trace.
     pub fn insert(&mut self, name: impl Into<String>, trace: Trace<B>) {
         self.signals.insert(name.into(), trace);
     }
 
+    /// Get a cloned trace by signal name.
     pub fn get(&self, name: &str) -> Result<Trace<B>> {
         self.signals
             .get(name)
@@ -33,6 +37,7 @@ impl<B: Backend> SignalEnv<B> {
             .ok_or_else(|| StlcgError::MissingSignal(name.to_string()))
     }
 
+    /// Return any trace from the environment for scalar broadcasting.
     pub fn template(&self) -> Result<Trace<B>> {
         self.signals
             .values()
@@ -41,6 +46,7 @@ impl<B: Backend> SignalEnv<B> {
             .ok_or(StlcgError::EmptySignalEnv)
     }
 
+    /// Validate that all traces share the same non-empty `[batch, time, dim]` shape.
     pub fn validate_compatible_shapes(&self) -> Result<()> {
         let Some((first_name, first)) = self.signals.iter().next() else {
             return Err(StlcgError::EmptySignalEnv);

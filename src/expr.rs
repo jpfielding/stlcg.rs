@@ -8,41 +8,56 @@ use crate::{Formula, Result, SignalEnv, Trace};
 /// Signal expression used in predicates.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
+    /// Named signal looked up in a [`SignalEnv`].
     Var(String),
+    /// Scalar value broadcast to the current trace shape during evaluation.
     Scalar(f64),
+    /// Unary negation.
     Neg(Box<Expr>),
+    /// Elementwise addition.
     Add(Box<Expr>, Box<Expr>),
+    /// Elementwise subtraction.
     Sub(Box<Expr>, Box<Expr>),
+    /// Elementwise multiplication.
     Mul(Box<Expr>, Box<Expr>),
+    /// Elementwise division.
     Div(Box<Expr>, Box<Expr>),
+    /// Elementwise absolute value.
     Abs(Box<Expr>),
 }
 
+/// Create a named signal expression.
 pub fn var(name: impl Into<String>) -> Expr {
     Expr::Var(name.into())
 }
 
+/// Create a scalar expression.
 pub const fn scalar(value: f64) -> Expr {
     Expr::Scalar(value)
 }
 
 impl Expr {
+    /// Take the elementwise absolute value of this expression.
     pub fn abs(self) -> Self {
         Self::Abs(Box::new(self))
     }
 
+    /// Build a predicate whose robustness is positive when `self <= rhs`.
     pub fn le(self, rhs: impl Into<Expr>) -> Formula {
         Formula::less_equal(self, rhs.into())
     }
 
+    /// Build a predicate whose robustness is positive when `self >= rhs`.
     pub fn ge(self, rhs: impl Into<Expr>) -> Formula {
         Formula::greater_equal(self, rhs.into())
     }
 
+    /// Build an equality predicate with robustness `-abs(self - rhs)`.
     pub fn eq_value(self, rhs: impl Into<Expr>) -> Formula {
         Formula::equal(self, rhs.into())
     }
 
+    /// Treat this expression directly as a robustness-valued formula.
     pub fn into_formula(self) -> Formula {
         Formula::expression(self)
     }

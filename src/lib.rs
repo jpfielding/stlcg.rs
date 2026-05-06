@@ -5,6 +5,8 @@
 //! `[batch, time, dim]`, and time is expected to be reversed as in the original
 //! STLCG implementation.
 
+#![warn(missing_docs)]
+
 mod env;
 mod error;
 mod expr;

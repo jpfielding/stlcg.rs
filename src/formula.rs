@@ -6,40 +6,52 @@ use burn::tensor::{Tensor, backend::Backend};
 use crate::ops::{maxish3, minish3, reduce_last_max, reduce_last_min, relu, select_time, temporal};
 use crate::{BoolTrace, EvalOptions, Expr, Interval, Result, SignalEnv, StlcgError, Trace};
 
-const LARGE_NEGATIVE: f64 = -1.0e6;
-
+/// Comparison operator used by predicate formulas.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PredicateOp {
+    /// Less-than-or-equal predicate.
     LessEqual,
+    /// Greater-than-or-equal predicate.
     GreaterEqual,
+    /// Equality predicate.
     Equal,
 }
 
 /// Integration scheme for [`Formula::Integral`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntegrationScheme {
+    /// Left Riemann-style discrete sum.
     Riemann,
+    /// Trapezoidal discrete sum with half-weighted endpoints.
     Trapezoid,
 }
 
 /// Padding used for finite-window integrals.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PaddingMode {
+    /// Pad missing samples with zero.
     Zero,
+    /// Pad missing samples with the earliest available sample.
     Same,
+    /// Pad missing samples with a caller-provided value.
     Custom(f64),
 }
 
 /// Options used by the integral formula.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntegralOptions {
+    /// Optional finite or lower-bounded integration window.
     pub interval: Option<Interval>,
+    /// Whether to clamp negative robustness values to zero before integration.
     pub use_relu: bool,
+    /// Padding strategy for finite windows that extend before the trace.
     pub padding: PaddingMode,
+    /// Discrete integration scheme.
     pub scheme: IntegrationScheme,
 }
 
 impl IntegralOptions {
+    /// Create cumulative integral options over all available history.
     pub const fn cumulative() -> Self {
         Self {
             interval: None,
@@ -49,6 +61,7 @@ impl IntegralOptions {
         }
     }
 
+    /// Create finite-window integral options using the default Riemann scheme.
     pub const fn window(interval: Interval) -> Self {
         Self {
             interval: Some(interval),
@@ -68,43 +81,72 @@ impl Default for IntegralOptions {
 /// STL formula AST.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Formula {
+    /// Robustness-valued expression used directly as a formula.
     Expression(Expr),
+    /// Scalar or signal comparison predicate.
     Predicate {
+        /// Left-hand expression.
         lhs: Expr,
+        /// Predicate comparison operator.
         op: PredicateOp,
+        /// Right-hand expression.
         rhs: Expr,
     },
+    /// Logical negation.
     Not(Box<Formula>),
+    /// Logical conjunction over one or more children.
     And(Vec<Formula>),
+    /// Logical disjunction over one or more children.
     Or(Vec<Formula>),
+    /// Logical implication.
     Implies(Box<Formula>, Box<Formula>),
+    /// Temporal always operator over an interval.
     Always {
+        /// Formula evaluated over the interval window.
         subformula: Box<Formula>,
+        /// Temporal interval.
         interval: Interval,
     },
+    /// Temporal eventually operator over an interval.
     Eventually {
+        /// Formula evaluated over the interval window.
         subformula: Box<Formula>,
+        /// Temporal interval.
         interval: Interval,
     },
+    /// Temporal until operator.
     Until {
+        /// Left-hand formula that must hold before the right-hand formula.
         lhs: Box<Formula>,
+        /// Right-hand formula that terminates the until condition.
         rhs: Box<Formula>,
+        /// Temporal interval.
         interval: Interval,
+        /// Whether the right-hand formula may overlap the left-hand formula at the boundary.
         overlap: bool,
     },
+    /// Temporal then operator.
     Then {
+        /// Left-hand formula that may occur before the right-hand formula.
         lhs: Box<Formula>,
+        /// Right-hand formula that follows the left-hand formula.
         rhs: Box<Formula>,
+        /// Temporal interval.
         interval: Interval,
+        /// Whether the right-hand formula may overlap the left-hand formula at the boundary.
         overlap: bool,
     },
+    /// Integral of a robustness-valued formula.
     Integral {
+        /// Formula to integrate.
         subformula: Box<Formula>,
+        /// Integral evaluation options.
         options: IntegralOptions,
     },
 }
 
 impl Formula {
+    /// Create a formula directly from a robustness-valued expression.
     pub fn expression(expr: Expr) -> Self {
         Self::Expression(expr)
     }
@@ -133,10 +175,12 @@ impl Formula {
         }
     }
 
+    /// Negate this formula.
     pub fn negated(self) -> Self {
         Self::Not(Box::new(self))
     }
 
+    /// Conjoin this formula with another formula.
     pub fn and(self, rhs: Self) -> Self {
         let mut children = match self {
             Self::And(children) => children,
@@ -149,6 +193,7 @@ impl Formula {
         Self::And(children)
     }
 
+    /// Disjoin this formula with another formula.
     pub fn or(self, rhs: Self) -> Self {
         let mut children = match self {
             Self::Or(children) => children,
@@ -161,10 +206,12 @@ impl Formula {
         Self::Or(children)
     }
 
+    /// Build an implication from this formula to `rhs`.
     pub fn implies(self, rhs: Self) -> Self {
         Self::Implies(Box::new(self), Box::new(rhs))
     }
 
+    /// Apply the temporal always operator over `interval`.
     pub fn always(self, interval: Interval) -> Self {
         Self::Always {
             subformula: Box::new(self),
@@ -172,6 +219,7 @@ impl Formula {
         }
     }
 
+    /// Apply the temporal eventually operator over `interval`.
     pub fn eventually(self, interval: Interval) -> Self {
         Self::Eventually {
             subformula: Box::new(self),
@@ -179,6 +227,7 @@ impl Formula {
         }
     }
 
+    /// Apply the temporal until operator with a boundary overlap policy.
     pub fn until(self, rhs: Self, interval: Interval, overlap: bool) -> Self {
         Self::Until {
             lhs: Box::new(self),
@@ -188,6 +237,7 @@ impl Formula {
         }
     }
 
+    /// Apply the temporal then operator with a boundary overlap policy.
     pub fn then(self, rhs: Self, interval: Interval, overlap: bool) -> Self {
         Self::Then {
             lhs: Box::new(self),
@@ -197,6 +247,7 @@ impl Formula {
         }
     }
 
+    /// Integrate this formula's robustness trace.
     pub fn integral(self, options: IntegralOptions) -> Self {
         Self::Integral {
             subformula: Box::new(self),
@@ -204,16 +255,19 @@ impl Formula {
         }
     }
 
+    /// Evaluate this formula into a robustness trace.
     pub fn robustness_trace<B: Backend>(
         &self,
         env: &SignalEnv<B>,
         options: EvalOptions,
     ) -> Result<Trace<B>> {
         env.validate_compatible_shapes()?;
+        options.validate()?;
         self.validate()?;
         self.robustness_trace_inner(env, options)
     }
 
+    /// Evaluate this formula at a non-reversed time index.
     pub fn robustness_at<B: Backend>(
         &self,
         env: &SignalEnv<B>,
@@ -228,6 +282,7 @@ impl Formula {
         Ok(trace.narrow(1, len - time - 1, 1))
     }
 
+    /// Evaluate this formula into a Boolean satisfaction trace.
     pub fn eval_trace<B: Backend>(
         &self,
         env: &SignalEnv<B>,
@@ -236,6 +291,7 @@ impl Formula {
         Ok(self.robustness_trace(env, options)?.greater_elem(0.0))
     }
 
+    /// Evaluate this formula into a Boolean satisfaction value at a non-reversed time index.
     pub fn eval_at<B: Backend>(
         &self,
         env: &SignalEnv<B>,
@@ -352,7 +408,8 @@ impl Formula {
             }
 
             if candidates.is_empty() {
-                candidates.push(rhs_trace.full_like(LARGE_NEGATIVE).narrow(1, 0, 1));
+                outputs.push(rhs_trace.full_like(f64::NEG_INFINITY).narrow(1, 0, 1));
+                continue;
             }
             outputs.push(reduce_last_max(candidates, options.aggregation));
         }
@@ -371,9 +428,17 @@ impl Formula {
                 }
                 children.iter().try_for_each(Self::validate)
             }
-            Self::Implies(lhs, rhs)
-            | Self::Until { lhs, rhs, .. }
-            | Self::Then { lhs, rhs, .. } => {
+            Self::Implies(lhs, rhs) => {
+                lhs.validate()?;
+                rhs.validate()
+            }
+            Self::Until {
+                lhs, rhs, interval, ..
+            }
+            | Self::Then {
+                lhs, rhs, interval, ..
+            } => {
+                interval.validate()?;
                 lhs.validate()?;
                 rhs.validate()
             }

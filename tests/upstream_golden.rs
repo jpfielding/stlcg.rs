@@ -4,9 +4,12 @@ use serde::Deserialize;
 use stlcg::{Aggregation, EvalOptions, Formula, IntegralOptions, Interval, SignalEnv, Trace, var};
 
 type B = Flex;
+const SOURCE_COMMIT: &str = "abd16c92108f1b57a72d66c58492c949b6c5a8ea";
 
 #[derive(Debug, Deserialize)]
 struct Fixture {
+    source_commit: String,
+    source_url: String,
     trace: TensorFixture,
     cases: Vec<CaseFixture>,
 }
@@ -28,6 +31,8 @@ fn rust_matches_upstream_stlcg_golden_cases() {
     let fixture: Fixture =
         serde_json::from_str(include_str!("fixtures/upstream_stlcg.json")).unwrap();
     assert_eq!(fixture.trace.shape, [1, 4, 1]);
+    assert_eq!(fixture.source_commit, SOURCE_COMMIT);
+    assert!(fixture.source_url.contains(SOURCE_COMMIT));
 
     let device = Default::default();
     let trace = Tensor::<B, 3>::from_data(
@@ -78,6 +83,42 @@ fn case_formula(name: &str) -> (Formula, EvalOptions) {
                 .then(var("x").le(2.0), Interval::unbounded(), true),
             exact,
         ),
+        "until_closed_1_2_ge2_until_le2" => (
+            var("x")
+                .ge(2.0)
+                .until(var("x").le(2.0), Interval::closed(1, 2), true),
+            exact,
+        ),
+        "then_closed_1_2_ge2_then_le2" => (
+            var("x")
+                .ge(2.0)
+                .then(var("x").le(2.0), Interval::closed(1, 2), true),
+            exact,
+        ),
+        "until_from_1_ge2_until_le2" => (
+            var("x")
+                .ge(2.0)
+                .until(var("x").le(2.0), Interval::from(1), true),
+            exact,
+        ),
+        "then_from_1_ge2_then_le2" => (
+            var("x")
+                .ge(2.0)
+                .then(var("x").le(2.0), Interval::from(1), true),
+            exact,
+        ),
+        "until_unbounded_no_overlap_ge2_until_le2" => (
+            var("x")
+                .ge(2.0)
+                .until(var("x").le(2.0), Interval::unbounded(), false),
+            exact,
+        ),
+        "then_unbounded_no_overlap_ge2_then_le2" => (
+            var("x")
+                .ge(2.0)
+                .then(var("x").le(2.0), Interval::unbounded(), false),
+            exact,
+        ),
         "integral_identity_cumulative" => (
             var("x")
                 .into_formula()
@@ -103,10 +144,20 @@ fn assert_tensor_close(name: &str, actual: Trace<B>, expected: &TensorFixture) {
     let actual = actual.into_data().into_vec::<f32>().unwrap();
     assert_eq!(actual.len(), expected.values.len(), "{name}");
     for (index, (actual, expected)) in actual.iter().zip(expected.values.iter()).enumerate() {
+        if is_empty_temporal_window_sentinel(*actual, *expected) {
+            continue;
+        }
+
         let diff = (actual - expected).abs();
         assert!(
             diff <= 1.0e-4,
             "case `{name}` differed at flat index {index}: actual={actual}, expected={expected}, diff={diff}"
         );
     }
+}
+
+fn is_empty_temporal_window_sentinel(actual: f32, expected: f32) -> bool {
+    // Upstream uses -1e6 for empty bounded until/then windows; this crate uses
+    // negative infinity so very negative real robustness values cannot be masked.
+    expected == -1_000_000.0 && actual.is_infinite() && actual.is_sign_negative()
 }

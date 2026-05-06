@@ -264,6 +264,102 @@
           1
         ],
         "values": [
+          -1000000.0,
+          -1000000.0,
+          -3.0,
+          -2.0
+        ]
+      },
+      "name": "until_closed_1_2_ge2_until_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1000000.0,
+          -1000000.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "then_closed_1_2_ge2_then_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1000000.0,
+          -3.0,
+          -3.0,
+          -2.0
+        ]
+      },
+      "name": "until_from_1_ge2_until_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1000000.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "then_from_1_ge2_then_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -3.0,
+          0.0,
+          -2.0
+        ]
+      },
+      "name": "until_unbounded_no_overlap_ge2_until_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "then_unbounded_no_overlap_ge2_then_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
           3.0,
           2.0,
           4.0,
@@ -289,7 +385,8 @@
       "name": "integral_identity_window_0_1"
     }
   ],
-  "source_url": "https://raw.githubusercontent.com/StanfordASL/stlcg/master/src/stlcg.py",
+  "source_commit": "abd16c92108f1b57a72d66c58492c949b6c5a8ea",
+  "source_url": "https://raw.githubusercontent.com/StanfordASL/stlcg/abd16c92108f1b57a72d66c58492c949b6c5a8ea/src/stlcg.py",
   "trace": {
     "shape": [
       1,

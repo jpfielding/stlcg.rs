@@ -5,6 +5,12 @@ edition = "2024"
 rust-version = "1.92"
 license = "MIT"
 description = "Signal Temporal Logic robustness evaluation with Burn tensors."
+repository = "https://github.com/jpfielding/stlcg.rs"
+homepage = "https://github.com/jpfielding/stlcg.rs"
+documentation = "https://docs.rs/stlcg"
+keywords = ["stl", "temporal-logic", "robustness", "burn", "autodiff"]
+categories = ["mathematics", "science"]
+exclude = [".github/"]
 
 [dependencies]
 burn = { version = "0.21.0-pre.5", default-features = false, features = ["std", "autodiff", "flex"] }

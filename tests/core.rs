@@ -3,12 +3,17 @@ use burn::backend::{Autodiff, Flex};
 use burn::tensor::Tensor;
 use stlcg::{
     Aggregation, EvalOptions, IntegralOptions, IntegrationScheme, Interval, PaddingMode, SignalEnv,
-    var,
+    StlcgError, var,
 };
 
 type B = Flex;
 
 fn env(values: [[[f32; 1]; 3]; 1]) -> SignalEnv<B> {
+    let device = Default::default();
+    SignalEnv::new().with("x", Tensor::<B, 3>::from_data(values, &device))
+}
+
+fn env4(values: [[[f32; 1]; 4]; 1]) -> SignalEnv<B> {
     let device = Default::default();
     SignalEnv::new().with("x", Tensor::<B, 3>::from_data(values, &device))
 }
@@ -148,4 +153,73 @@ fn autodiff_backend_produces_gradients() {
     let grad = x.grad(&grads).unwrap();
     let values = grad.into_data().into_vec::<f32>().unwrap();
     assert!(values.iter().all(|value| value.is_finite()));
+}
+
+#[test]
+fn until_and_then_validate_intervals() {
+    let env = env([[[3.0], [2.0], [1.0]]]);
+    let interval = Interval::closed(2, 1);
+
+    let until = var("x")
+        .ge(0.0)
+        .until(var("x").le(2.0), interval, true)
+        .robustness_trace(&env, EvalOptions::default());
+    assert!(matches!(until, Err(StlcgError::InvalidInterval(_))));
+
+    let then = var("x")
+        .ge(0.0)
+        .then(var("x").le(2.0), interval, true)
+        .robustness_trace(&env, EvalOptions::default());
+    assert!(matches!(then, Err(StlcgError::InvalidInterval(_))));
+}
+
+#[test]
+fn invalid_eval_options_are_rejected() {
+    let env = env([[[3.0], [2.0], [1.0]]]);
+    let formula = var("x").le(2.0);
+
+    let zero_smooth = formula.robustness_trace(&env, EvalOptions::smooth(0.0));
+    assert!(matches!(zero_smooth, Err(StlcgError::InvalidOption(_))));
+
+    let infinite_smooth = formula.robustness_trace(&env, EvalOptions::smooth(f64::INFINITY));
+    assert!(matches!(infinite_smooth, Err(StlcgError::InvalidOption(_))));
+
+    let negative_predicate_scale =
+        formula.robustness_trace(&env, EvalOptions::exact().with_predicate_scale(-1.0));
+    assert!(matches!(
+        negative_predicate_scale,
+        Err(StlcgError::InvalidOption(_))
+    ));
+
+    let infinite_predicate_scale = formula.robustness_trace(
+        &env,
+        EvalOptions::exact().with_predicate_scale(f64::INFINITY),
+    );
+    assert!(matches!(
+        infinite_predicate_scale,
+        Err(StlcgError::InvalidOption(_))
+    ));
+}
+
+#[test]
+fn empty_until_and_then_candidate_windows_are_negative_infinity() {
+    let env = env4([[[3_000_000.0], [0.0], [0.0], [0.0]]]);
+
+    let until = var("x")
+        .ge(0.0)
+        .until(var("x").le(-2_000_000.0), Interval::closed(1, 1), true)
+        .robustness_trace(&env, EvalOptions::default())
+        .unwrap();
+    let actual = values(until);
+
+    assert!(actual[0].is_infinite() && actual[0].is_sign_negative());
+    assert!(actual[1] < -1_000_000.0);
+
+    let then = var("x")
+        .ge(0.0)
+        .then(var("x").le(-2_000_000.0), Interval::closed(1, 1), true)
+        .robustness_trace(&env, EvalOptions::default())
+        .unwrap();
+    let actual = values(then);
+    assert!(actual[0].is_infinite() && actual[0].is_sign_negative());
 }

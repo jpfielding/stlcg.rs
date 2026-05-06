@@ -7,20 +7,31 @@ pub enum Interval {
     #[default]
     Unbounded,
     /// `[start, end]`, inclusive.
-    Closed { start: usize, end: usize },
+    Closed {
+        /// Inclusive lower offset bound.
+        start: usize,
+        /// Inclusive upper offset bound.
+        end: usize,
+    },
     /// `[start, infinity)`.
-    From { start: usize },
+    From {
+        /// Inclusive lower offset bound.
+        start: usize,
+    },
 }
 
 impl Interval {
+    /// Create an unbounded interval `[0, infinity)`.
     pub const fn unbounded() -> Self {
         Self::Unbounded
     }
 
+    /// Create a closed interval `[start, end]`.
     pub const fn closed(start: usize, end: usize) -> Self {
         Self::Closed { start, end }
     }
 
+    /// Create a lower-bounded interval `[start, infinity)`.
     pub const fn from(start: usize) -> Self {
         Self::From { start }
     }

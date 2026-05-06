@@ -1,0 +1,306 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          3.0,
+          0.0,
+          2.0
+        ]
+      },
+      "name": "less_equal_x_le_2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          1.0,
+          -3.0,
+          0.0,
+          -2.0
+        ]
+      },
+      "name": "greater_equal_x_ge_2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -3.0,
+          -0.0,
+          -2.0
+        ]
+      },
+      "name": "equal_x_eq_2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          1.0,
+          -3.0,
+          -0.0,
+          -2.0
+        ]
+      },
+      "name": "not_less_equal_x_le_2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -3.0,
+          0.0,
+          -2.0
+        ]
+      },
+      "name": "and_ge2_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          1.0,
+          3.0,
+          0.0,
+          2.0
+        ]
+      },
+      "name": "or_ge2_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          3.0,
+          -0.0,
+          2.0
+        ]
+      },
+      "name": "implies_ge2_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0
+        ]
+      },
+      "name": "always_unbounded_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          3.0,
+          3.0,
+          3.0
+        ]
+      },
+      "name": "eventually_unbounded_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "always_closed_0_1_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          3.0,
+          3.0,
+          2.0
+        ]
+      },
+      "name": "eventually_closed_0_1_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          -1.0,
+          -1.0
+        ]
+      },
+      "name": "always_from_1_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          3.0,
+          3.0
+        ]
+      },
+      "name": "eventually_from_1_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          1.0,
+          3.0,
+          0.06931471824645996,
+          2.0
+        ]
+      },
+      "name": "or_smooth_scale_10"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -3.0,
+          0.0,
+          -2.0
+        ]
+      },
+      "name": "until_unbounded_ge2_until_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          -1.0,
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      "name": "then_unbounded_ge2_then_le2"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          3.0,
+          2.0,
+          4.0,
+          4.0
+        ]
+      },
+      "name": "integral_identity_cumulative"
+    },
+    {
+      "expected": {
+        "shape": [
+          1,
+          4,
+          1
+        ],
+        "values": [
+          6.0,
+          2.0,
+          1.0,
+          2.0
+        ]
+      },
+      "name": "integral_identity_window_0_1"
+    }
+  ],
+  "source_url": "https://raw.githubusercontent.com/StanfordASL/stlcg/master/src/stlcg.py",
+  "trace": {
+    "shape": [
+      1,
+      4,
+      1
+    ],
+    "values": [
+      3.0,
+      -1.0,
+      2.0,
+      0.0
+    ]
+  }
+}

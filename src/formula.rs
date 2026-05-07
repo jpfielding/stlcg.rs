@@ -480,7 +480,7 @@ fn eval_children<B: Backend>(
 fn candidate_indices(interval: Interval, index: usize) -> Vec<usize> {
     match interval {
         Interval::Unbounded => (0..=index).collect(),
-        Interval::Closed { start, end } if index < end => Vec::new(),
+        Interval::Closed { end, .. } if index < end => Vec::new(),
         Interval::Closed { start, end } => ((index - end)..=(index - start)).collect(),
         Interval::From { start } if index < start => Vec::new(),
         Interval::From { start } => (0..=(index - start)).collect(),

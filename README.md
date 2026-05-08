@@ -1,5 +1,7 @@
 # stlcg.rs
 
+[![CI](https://github.com/jpfielding/stlcg.rs/actions/workflows/ci.yml/badge.svg)](https://github.com/jpfielding/stlcg.rs/actions/workflows/ci.yml)
+
 An idiomatic Rust port of the core StanfordASL STLCG robustness evaluator.
 
 The crate uses [Burn](https://burn.dev/) tensors and is generic over Burn
